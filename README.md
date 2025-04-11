@@ -52,7 +52,7 @@ Configuration
 bash
 Copy
 # 1. Cloner le dépôt
-git clone 
+git clone https://github.com/Skull-ice/supermarch-_temp
 cd supermarche-analytics
 
 # 2. Installer les dépendances
