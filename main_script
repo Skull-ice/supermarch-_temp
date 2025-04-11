@@ -1,0 +1,37 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime
+import os
+
+# Configurer les dossiers
+os.makedirs("outputs/plots", exist_ok=True)
+
+# 1. Chargement des données
+clients = pd.read_csv("../data/clients.csv")
+stocks = pd.read_csv("../data/stocks.csv")
+ventes = pd.read_csv("../data/ventes.csv")
+
+# 2. Nettoyage
+ventes = ventes.drop_duplicates()
+stocks["alerte_rupture"] = stocks["stock_actuel"] < stocks["seuil_reappro"]
+
+# 3. Analyse RFM
+def calculate_rfm(df_clients, df_ventes):
+    df_ventes["date_vente"] = pd.to_datetime(df_ventes["date_vente"])
+    last_date = df_ventes["date_vente"].max()
+    
+    rfm = df_ventes.groupby("id_client").agg(
+        recence=("date_vente", lambda x: (last_date - x.max()).days),
+        frequence=("id_vente", "count"),
+        montant=("montant", "sum")
+    )
+    return rfm.merge(df_clients, on="id_client")
+
+rfm_results = calculate_rfm(clients, ventes)
+rfm_results.to_csv("../outputs/rfm_results.csv", index=False)
+
+# 4. Visualisation
+plt.figure(figsize=(10, 6))
+ventes.merge(stocks, on="id_produit").groupby("categorie")["montant"].sum().plot.bar()
+plt.title("CA par Catégorie")
+plt.savefig("../outputs/plots/ca_categories.png")
